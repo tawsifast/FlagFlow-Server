@@ -39,6 +39,21 @@ model Environment {
   name      String
   projectId String
   createdAt DateTime @default(now())
-
+  featureFlags FeatureFlag[]
   project Project @relation(fields: [projectId], references: [id])
+}
+
+model FeatureFlag {
+  id            String   @id @default(uuid())
+  name          String
+  key           String
+  description   String?
+  enabled       Boolean  @default(false)
+  environmentId String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  environment Environment @relation(fields: [environmentId], references: [id])
+
+  @@unique([environmentId, key])
 }
