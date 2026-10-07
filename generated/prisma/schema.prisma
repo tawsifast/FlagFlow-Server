@@ -1,0 +1,62 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id       String   @id @default(uuid())
+  name     String
+  email    String   @unique
+  password String
+  role     UserRole @default(USER)
+  avatar   String?
+
+  projects Project[]
+}
+
+enum UserRole {
+  USER
+  DEVELOPER
+  ADMIN
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  userId      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  environments Environment[]
+  user         User          @relation(fields: [userId], references: [id])
+}
+
+model Environment {
+  id        String   @id @default(uuid())
+  name      String
+  projectId String
+  createdAt DateTime @default(now())
+
+  featureFlags FeatureFlag[]
+  project      Project       @relation(fields: [projectId], references: [id])
+}
+
+model FeatureFlag {
+  id            String   @id @default(uuid())
+  name          String
+  key           String
+  description   String?
+  enabled       Boolean  @default(false)
+  environmentId String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  environment Environment @relation(fields: [environmentId], references: [id])
+
+  @@unique([environmentId, key])
+}
