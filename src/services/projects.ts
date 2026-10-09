@@ -1,65 +1,28 @@
+import { Router } from "express";
 import prisma from "../lib/prisma.js";
 
-export const createProject = async (
-  name: string,
-  description: string | undefined,
-  userId: string
-) => {
-  const project = await prisma.project.create({
-    data: {
-      name,
-      description,
-      userId,
-    },
-  });
+const router = Router();
 
-  return project;
-};
+router.get("/", async (_req, res) => {
+  try {
+    const projects = await prisma.project.findMany({
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
 
-export const getProjects = async () => {
-  const projects = await prisma.project.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
-  });
+    res.status(200).json({
+      success: true,
+      data: projects,
+    });
+  } catch (error) {
+    console.error("Get projects error:", error);
 
-  return projects;
-};
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch projects",
+    });
+  }
+});
 
-export const getProjectById = async (id: string) => {
-  const project = await prisma.project.findUnique({
-    where: {
-      id,
-    },
-  });
-
-  return project;
-};
-
-export const updateProject = async (
-  id: string,
-  name: string,
-  description: string | undefined
-) => {
-  const project = await prisma.project.update({
-    where: {
-      id,
-    },
-    data: {
-      name,
-      description,
-    },
-  });
-
-  return project;
-};
-
-export const deleteProject = async (id: string) => {
-  const project = await prisma.project.delete({
-    where: {
-      id,
-    },
-  });
-
-  return project;
-};
+export default router;
