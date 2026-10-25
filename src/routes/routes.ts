@@ -1,8 +1,16 @@
 import { Router } from "express";
-import projects from "../services/projects.js";
+import projectsRoutes from "./projects.routes.js";
+import environmentsRoutes from "./environments.routes.js";
+import flagsRoutes from "./flags.routes.js";
+import auditLogsRoutes from "./audit-logs.routes.js";
+import featuresRoutes from "./features.routes.js";
 
 const router = Router();
 
-router.use("/projects", projects);
+router.use("/projects", projectsRoutes);
+router.use("/environments", environmentsRoutes);
+router.use("/flags", flagsRoutes);
+router.use("/audit-logs", auditLogsRoutes);
+router.use("/features", featuresRoutes);
 
 export default router;

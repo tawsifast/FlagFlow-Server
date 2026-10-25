@@ -7,33 +7,78 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id       String   @id @default(uuid())
-  name     String
-  email    String   @unique
-  password String
-  role     UserRole @default(USER)
-  avatar   String?
-
-  projects Project[]
-}
-
 enum UserRole {
   USER
   DEVELOPER
   ADMIN
 }
 
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  emailVerified Boolean  @default(false)
+  image         String?
+  password      String?
+  role          UserRole @default(USER)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @default(now()) @updatedAt
+
+  sessions  Session[]
+  accounts  Account[]
+  projects  Project[]
+  auditLogs AuditLog[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @default(now()) @updatedAt
+}
+
+model Verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @default(now()) @updatedAt
+}
+
 model Project {
   id          String   @id @default(uuid())
   name        String
+  key         String   @unique
   description String?
   userId      String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   environments Environment[]
-  user         User          @relation(fields: [userId], references: [id])
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Environment {
@@ -43,7 +88,9 @@ model Environment {
   createdAt DateTime @default(now())
 
   featureFlags FeatureFlag[]
-  project      Project       @relation(fields: [projectId], references: [id])
+  project      Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, name])
 }
 
 model FeatureFlag {
@@ -56,7 +103,20 @@ model FeatureFlag {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
-  environment Environment @relation(fields: [environmentId], references: [id])
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
 
   @@unique([environmentId, key])
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  userName    String
+  action      String
+  target      String
+  environment String?
+  projectName String?
+  userId      String?
+  createdAt   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 }
